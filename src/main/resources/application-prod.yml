@@ -1,0 +1,39 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  datasource:
+    url: jdbc:sqlite:delivery-prod.db
+    driver-class-name: org.sqlite.JDBC
+
+logging:
+  level:
+    root: WARN
+    com.delivery: INFO
+    org.springframework: WARN
+  file:
+    name: logs/delivery-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+
+server:
+  port: 8080
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never
