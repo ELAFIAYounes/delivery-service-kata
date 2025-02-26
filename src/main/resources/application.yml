@@ -19,6 +19,12 @@ spring:
     init:
       mode: always
       platform: sqlite
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 server:
   port: 8080
