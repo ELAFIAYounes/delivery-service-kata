@@ -134,102 +134,124 @@ The API uses standard HTTP status codes and includes detailed error messages:
 
 # Order Management Service
 
-A Spring Boot application implementing order management and refund request functionality following Clean Architecture principles.
+A Spring Boot-based order management service implementing Clean Architecture principles.
+
+## Features
+
+- Customer order history viewing
+- Refund request submission with evidence
+- Clean Architecture implementation
+- Comprehensive error handling and logging
+- SQLite database integration
 
 ## Technical Stack
 
 - Java 21
 - Spring Boot 3.2.2
 - SQLite Database
-- Redis for Caching
-- Cucumber for BDD Testing
-- JUnit for Unit Testing
-
-## Features
-
-1. **Order History**
-   - View customer order history
-   - Orders sorted by date
-   - Complete order details including items and status
-
-2. **Refund Management**
-   - Submit refund requests for specific products
-   - Upload evidence (images) for refund requests
-   - Track refund request status
+- JUnit & Cucumber for testing
+- Swagger UI for API documentation
 
 ## Project Structure
 
 ```
 src/
 ├── main/
-│   ├── java/
-│   │   └── com/delivery/
-│   │       ├── config/         # Configuration classes
-│   │       ├── domain/         # Domain entities and repositories
-│   │       ├── rest/           # REST API controllers and DTOs
-│   │       └── service/        # Business logic implementation
+│   ├── java/com/ordermanagement/
+│   │   ├── domain/          # Entities and business rules
+│   │   │   ├── entity/     # Domain entities
+│   │   │   └── repository/ # Repository interfaces
+│   │   ├── service/        # Use cases implementation
+│   │   └── rest/           # Controllers and API definitions
 │   └── resources/
-│       ├── application.yml     # Application configuration
-│       └── schema.sql         # Database schema
+│       ├── application.yml # Application configuration
+│       ├── schema.sql     # Database schema
+│       └── data.sql       # Test data
 └── test/
-    ├── java/                  # Unit and integration tests
-    └── resources/
-        └── features/          # BDD feature files
+    └── java/
+        └── features/      # BDD test scenarios
 ```
 
 ## Getting Started
 
-1. **Prerequisites**
-   - Java 21
-   - Redis server running on localhost:6379
+### Prerequisites
 
-2. **Build**
+- Java 21 JDK installed
+- VS Code with Java extensions
+- Git
+
+### Running the Application
+
+1. Clone the repository:
 ```bash
-./mvnw clean install
+git clone https://github.com/ELAFIAYounes/delivery-service-kata.git
+cd delivery-service-kata
 ```
 
-3. **Run**
-```bash
-./mvnw spring-boot:run
+2. Run the application using VS Code:
+   - Open in VS Code
+   - Use Spring Boot Dashboard
+   - Click Run on `order-management-service`
+
+The application will start on `http://localhost:8080`
+
+### API Documentation
+
+Access Swagger UI: `http://localhost:8080/swagger-ui.html`
+
+### Available Endpoints
+
+1. Get Customer Order History
+```
+GET /api/customers/{customerId}/orders
 ```
 
-4. **API Documentation**
-   - Swagger UI: http://localhost:8080/swagger-ui.html
-   - OpenAPI Docs: http://localhost:8080/api-docs
+2. Submit Refund Request
+```
+POST /api/orders/items/{orderItemId}/refund
+```
 
 ## Testing
 
 The project follows TDD/BDD practices with:
 - Unit tests using JUnit
-- BDD scenarios using Cucumber
 - Integration tests with Spring Boot Test
+- BDD scenarios using Cucumber
 
-Run tests with:
+Run tests using VS Code's test explorer or Maven:
 ```bash
 ./mvnw test
 ```
 
-## API Endpoints
-
-1. **Get Customer Order History**
-   ```
-   GET /customers/{customerId}/orders
-   ```
-
-2. **Submit Refund Request**
-   ```
-   POST /orders/items/{orderItemId}/refund
-   Body: {
-     "description": "Reason for refund",
-     "evidenceImageUrl": "URL to evidence image"
-   }
-   ```
-
 ## Clean Architecture
 
-The project follows Clean Architecture principles:
-- Domain entities are independent of frameworks
-- Business rules in the service layer
-- Controllers depend on services, not vice versa
-- Clear separation of concerns
-- Dependency injection for loose coupling
+This project strictly follows Clean Architecture principles:
+
+1. **Domain Layer**
+   - Contains business entities and rules
+   - Independent of external frameworks
+   - Core business logic
+
+2. **Service Layer**
+   - Implements use cases
+   - Orchestrates domain entities
+   - Business rules enforcement
+
+3. **REST Layer**
+   - HTTP endpoints
+   - Request/Response handling
+   - Input validation
+
+## Error Handling
+
+- Comprehensive exception handling
+- Proper HTTP status codes
+- Detailed error messages
+- Logging at appropriate levels
+
+## Logging
+
+- Structured logging using SLF4J
+- Different log levels (DEBUG, INFO, ERROR)
+- Log file rotation
+- Performance logging for database operations
