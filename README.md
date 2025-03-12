@@ -204,11 +204,35 @@ Access Swagger UI: `http://localhost:8080/swagger-ui.html`
 1. Get Customer Order History
 ```
 GET /api/customers/{customerId}/orders
+Response:
+[
+  {
+    "id": 1,
+    "customerId": "customer123",
+    "orderDate": "2024-03-12T10:00:00",
+    "status": "CONFIRMED",
+    "items": [
+      {
+        "id": 1,
+        "productId": "PROD-001",
+        "productName": "Product 1",
+        "quantity": 2,
+        "price": 29.99
+      }
+    ]
+  }
+]
 ```
 
 2. Submit Refund Request
 ```
 POST /api/orders/items/{orderItemId}/refund
+Request Body:
+{
+  "description": "Product damaged on arrival",
+  "evidenceImageUrl": "https://example.com/evidence.jpg"
+}
+Response: 200 OK
 ```
 
 ## Testing
@@ -228,30 +252,30 @@ Run tests using VS Code's test explorer or Maven:
 This project strictly follows Clean Architecture principles:
 
 1. **Domain Layer**
-   - Contains business entities and rules
+   - Contains business entities (`Order`, `OrderItem`, `RefundRequest`)
    - Independent of external frameworks
-   - Core business logic
+   - Core business logic and validation rules
 
 2. **Service Layer**
-   - Implements use cases
+   - Implements use cases (`OrderService`, `RefundService`)
    - Orchestrates domain entities
    - Business rules enforcement
 
 3. **REST Layer**
-   - HTTP endpoints
-   - Request/Response handling
-   - Input validation
+   - HTTP endpoints in `OrderController`
+   - Request/Response handling with DTOs
+   - Input validation using Jakarta Validation
 
 ## Error Handling
 
-- Comprehensive exception handling
-- Proper HTTP status codes
-- Detailed error messages
-- Logging at appropriate levels
+- Comprehensive exception handling with `@ExceptionHandler`
+- Proper HTTP status codes (200, 400, 404, 500)
+- Detailed error messages in `ErrorResponse`
+- Logging at appropriate levels (DEBUG, INFO, ERROR)
 
 ## Logging
 
 - Structured logging using SLF4J
-- Different log levels (DEBUG, INFO, ERROR)
-- Log file rotation
+- Different log levels for development and production
+- Log file rotation with daily rollover
 - Performance logging for database operations
