@@ -131,3 +131,105 @@ The API uses standard HTTP status codes and includes detailed error messages:
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
+
+# Order Management Service
+
+A Spring Boot application implementing order management and refund request functionality following Clean Architecture principles.
+
+## Technical Stack
+
+- Java 21
+- Spring Boot 3.2.2
+- SQLite Database
+- Redis for Caching
+- Cucumber for BDD Testing
+- JUnit for Unit Testing
+
+## Features
+
+1. **Order History**
+   - View customer order history
+   - Orders sorted by date
+   - Complete order details including items and status
+
+2. **Refund Management**
+   - Submit refund requests for specific products
+   - Upload evidence (images) for refund requests
+   - Track refund request status
+
+## Project Structure
+
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── com/delivery/
+│   │       ├── config/         # Configuration classes
+│   │       ├── domain/         # Domain entities and repositories
+│   │       ├── rest/           # REST API controllers and DTOs
+│   │       └── service/        # Business logic implementation
+│   └── resources/
+│       ├── application.yml     # Application configuration
+│       └── schema.sql         # Database schema
+└── test/
+    ├── java/                  # Unit and integration tests
+    └── resources/
+        └── features/          # BDD feature files
+```
+
+## Getting Started
+
+1. **Prerequisites**
+   - Java 21
+   - Redis server running on localhost:6379
+
+2. **Build**
+```bash
+./mvnw clean install
+```
+
+3. **Run**
+```bash
+./mvnw spring-boot:run
+```
+
+4. **API Documentation**
+   - Swagger UI: http://localhost:8080/swagger-ui.html
+   - OpenAPI Docs: http://localhost:8080/api-docs
+
+## Testing
+
+The project follows TDD/BDD practices with:
+- Unit tests using JUnit
+- BDD scenarios using Cucumber
+- Integration tests with Spring Boot Test
+
+Run tests with:
+```bash
+./mvnw test
+```
+
+## API Endpoints
+
+1. **Get Customer Order History**
+   ```
+   GET /customers/{customerId}/orders
+   ```
+
+2. **Submit Refund Request**
+   ```
+   POST /orders/items/{orderItemId}/refund
+   Body: {
+     "description": "Reason for refund",
+     "evidenceImageUrl": "URL to evidence image"
+   }
+   ```
+
+## Clean Architecture
+
+The project follows Clean Architecture principles:
+- Domain entities are independent of frameworks
+- Business rules in the service layer
+- Controllers depend on services, not vice versa
+- Clear separation of concerns
+- Dependency injection for loose coupling

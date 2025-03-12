@@ -1,9 +1,11 @@
 spring:
   application:
-    name: delivery-service
+    name: order-management-service
   datasource:
-    url: jdbc:sqlite:delivery.db
+    url: jdbc:sqlite:orders.db
     driver-class-name: org.sqlite.JDBC
+    username: sa
+    password: sa
   jpa:
     open-in-view: false
     hibernate:
@@ -14,20 +16,23 @@ spring:
       hibernate:
         dialect: org.hibernate.community.dialect.SQLiteDialect
         format_sql: true
-        show_sql: true
+        jdbc:
+          fetch_size: 50
+        generate_statistics: true
   sql:
     init:
       mode: always
       platform: sqlite
-  cache:
-    type: redis
-  data:
-    redis:
-      host: localhost
-      port: 6379
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
 
 server:
   port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
 
 springdoc:
   api-docs:
@@ -36,21 +41,15 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
-
 logging:
+  file:
+    name: ./logs/order-management-service.log
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
   level:
     root: INFO
-    com.delivery: DEBUG
-    org.springframework: INFO
+    com.ordermanagement: DEBUG
+    org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.type.descriptor.sql: TRACE

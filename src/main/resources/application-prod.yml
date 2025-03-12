@@ -12,8 +12,8 @@ spring:
 
 logging:
   level:
-    root: WARN
-    com.delivery: INFO
+    root: INFO
+    com.ordermanagement: INFO
     org.springframework: WARN
   file:
     name: logs/delivery-service.log

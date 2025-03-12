@@ -13,7 +13,7 @@ spring:
 logging:
   level:
     root: INFO
-    com.delivery: DEBUG
+    com.ordermanagement: DEBUG
     org.springframework: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE

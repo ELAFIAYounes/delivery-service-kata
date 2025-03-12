@@ -1,20 +1,16 @@
--- Insert time slots for DRIVE mode
-INSERT INTO time_slots (start_time, end_time, delivery_mode, is_available) VALUES
-('2025-02-24 10:00:00', '2025-02-24 11:00:00', 'DRIVE', 1),
-('2025-02-24 11:00:00', '2025-02-24 12:00:00', 'DRIVE', 1),
-('2025-02-24 14:00:00', '2025-02-24 15:00:00', 'DRIVE', 1);
+-- Insert sample orders
+INSERT INTO orders (customer_id, order_date, status) VALUES
+('customer123', '2025-03-10 14:30:00', 'DELIVERED'),
+('customer123', '2025-03-09 10:15:00', 'DELIVERED'),
+('customer123', '2025-03-11 09:00:00', 'PENDING');
 
--- Insert time slots for DELIVERY mode
-INSERT INTO time_slots (start_time, end_time, delivery_mode, is_available) VALUES
-('2025-02-24 09:00:00', '2025-02-24 10:00:00', 'DELIVERY', 1),
-('2025-02-24 13:00:00', '2025-02-24 14:00:00', 'DELIVERY', 1);
+-- Insert sample order items
+INSERT INTO order_items (order_id, product_id, product_name, quantity, price) VALUES
+(1, 'PROD-001', 'Laptop XPS 13', 1, 1299.99),
+(1, 'PROD-002', 'Wireless Mouse', 1, 29.99),
+(2, 'PROD-003', 'External Monitor', 1, 299.99),
+(3, 'PROD-004', 'Mechanical Keyboard', 1, 149.99);
 
--- Insert time slots for DELIVERY_TODAY mode
-INSERT INTO time_slots (start_time, end_time, delivery_mode, is_available) VALUES
-('2025-02-24 15:00:00', '2025-02-24 16:00:00', 'DELIVERY_TODAY', 1),
-('2025-02-24 16:00:00', '2025-02-24 17:00:00', 'DELIVERY_TODAY', 1);
-
--- Insert time slots for DELIVERY_ASAP mode
-INSERT INTO time_slots (start_time, end_time, delivery_mode, is_available) VALUES
-('2025-02-24 09:30:00', '2025-02-24 10:30:00', 'DELIVERY_ASAP', 1),
-('2025-02-24 10:30:00', '2025-02-24 11:30:00', 'DELIVERY_ASAP', 1);
+-- Insert sample refund request
+INSERT INTO refund_requests (order_item_id, description, evidence_image_url, request_date, status) VALUES
+(1, 'Product arrived damaged', 'https://evidence-bucket.example.com/images/damage-001.jpg', '2025-03-11 10:00:00', 'PENDING');
