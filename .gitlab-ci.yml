@@ -1,0 +1,79 @@
+image: eclipse-temurin:21-jdk
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository
+
+stages:
+  - validate
+  - test
+  - build
+  - package
+  - deploy
+
+validate:
+  stage: validate
+  script:
+    - ./mvnw.cmd validate
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+checkstyle:
+  stage: validate
+  script:
+    - ./mvnw.cmd checkstyle:check
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  allow_failure: true
+
+unit-test:
+  stage: test
+  script:
+    - ./mvnw.cmd clean test
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+    paths:
+      - target/site/jacoco/
+  coverage: '/Total.*?([0-9]{1,3})%/'
+
+build:
+  stage: build
+  script:
+    - ./mvnw.cmd compile
+
+package:
+  stage: package
+  script:
+    - ./mvnw.cmd package -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy-dev:
+  stage: deploy
+  script:
+    - echo "Deploying to dev environment"
+    # Add your deployment commands here
+  environment:
+    name: development
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  when: manual
+
+deploy-prod:
+  stage: deploy
+  script:
+    - echo "Deploying to production environment"
+    # Add your deployment commands here
+  environment:
+    name: production
+  rules:
+    - if: $CI_COMMIT_TAG
+  when: manual
