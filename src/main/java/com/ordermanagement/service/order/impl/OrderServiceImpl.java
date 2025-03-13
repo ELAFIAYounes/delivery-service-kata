@@ -1,5 +1,6 @@
 package com.ordermanagement.service.order.impl;
 
+import com.ordermanagement.application.messaging.OrderEventPublisher;
 import com.ordermanagement.domain.entity.Order;
 import com.ordermanagement.domain.entity.OrderItem;
 import com.ordermanagement.domain.entity.RefundRequest;
@@ -25,6 +26,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final RefundRequestRepository refundRequestRepository;
+    private final OrderEventPublisher orderEventPublisher;
 
     @Override
     public List<Order> getCustomerOrderHistory(String customerId) {
@@ -54,12 +56,21 @@ public class OrderServiceImpl implements OrderService {
         refundRequest.setRequestDate(LocalDateTime.now());
         refundRequest.setStatus(RefundStatus.PENDING);
 
-        refundRequestRepository.save(refundRequest);
+        RefundRequest savedRefundRequest = refundRequestRepository.save(refundRequest);
+        
+        // Publish refund request event
+        orderEventPublisher.publishRefundRequested(savedRefundRequest);
+        
         return orderItem.getOrder();
     }
 
     @Override
     public Order saveOrder(Order order) {
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        
+        // Publish order created event
+        orderEventPublisher.publishOrderCreated(savedOrder);
+        
+        return savedOrder;
     }
 }

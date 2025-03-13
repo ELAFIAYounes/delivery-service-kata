@@ -30,6 +30,14 @@ spring:
       platform: h2
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: order-management-group
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 server:
   port: 8080
