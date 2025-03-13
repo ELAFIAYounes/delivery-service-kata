@@ -2,27 +2,32 @@ spring:
   application:
     name: order-management-service
   datasource:
-    url: jdbc:sqlite:orders.db
-    driver-class-name: org.sqlite.JDBC
+    url: jdbc:h2:mem:orderdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
-    password: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
   jpa:
     open-in-view: false
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: none
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.community.dialect.SQLiteDialect
+        dialect: org.hibernate.dialect.H2Dialect
         format_sql: true
         jdbc:
+          batch_size: 50
           fetch_size: 50
-        generate_statistics: true
+        generate_statistics: false
   sql:
     init:
       mode: always
-      platform: sqlite
+      platform: h2
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
 
@@ -38,8 +43,9 @@ springdoc:
   api-docs:
     path: /api-docs
   swagger-ui:
-    path: /swagger-ui.html
+    path: /swagger-ui
     operations-sorter: method
+    tags-sorter: alpha
 
 logging:
   file:
@@ -49,7 +55,17 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
   level:
     root: INFO
+    org.springframework: INFO
     com.ordermanagement: DEBUG
-    org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    io.cucumber: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

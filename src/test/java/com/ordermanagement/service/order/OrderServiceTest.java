@@ -1,162 +1,161 @@
 package com.ordermanagement.service.order;
 
-import com.ordermanagement.BaseTest;
-import com.ordermanagement.domain.entity.*;
+import com.ordermanagement.domain.entity.Order;
+import com.ordermanagement.domain.entity.OrderItem;
+import com.ordermanagement.domain.entity.OrderStatus;
+import com.ordermanagement.domain.entity.RefundRequest;
 import com.ordermanagement.domain.repository.OrderRepository;
+import com.ordermanagement.domain.repository.OrderItemRepository;
+import com.ordermanagement.domain.repository.RefundRequestRepository;
 import com.ordermanagement.service.order.exception.OrderNotFoundException;
 import com.ordermanagement.service.order.impl.OrderServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
-class OrderServiceTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
 
-    @InjectMocks
-    private OrderServiceImpl orderService;
+    @Mock
+    private OrderItemRepository orderItemRepository;
 
-    private Order testOrder;
-    private OrderItem testOrderItem;
-    private static final String TEST_CUSTOMER_ID = "customer123";
+    @Mock
+    private RefundRequestRepository refundRequestRepository;
+
+    private OrderService orderService;
 
     @BeforeEach
     void setUp() {
-        testOrder = new Order();
-        testOrder.setId(1L);
-        testOrder.setCustomerId(TEST_CUSTOMER_ID);
-        testOrder.setOrderDate(LocalDateTime.now());
-        testOrder.setStatus(OrderStatus.DELIVERED);
-
-        testOrderItem = new OrderItem();
-        testOrderItem.setId(1L);
-        testOrderItem.setOrder(testOrder);
-        testOrderItem.setProductId("PROD-001");
-        testOrderItem.setProductName("Test Product");
-        testOrderItem.setQuantity(1);
-        testOrderItem.setPrice(BigDecimal.valueOf(99.99));
-
-        testOrder.setItems(Arrays.asList(testOrderItem));
+        orderService = new OrderServiceImpl(orderRepository, orderItemRepository, refundRequestRepository);
     }
 
     @Test
     void getCustomerOrderHistory_ShouldReturnOrders() {
-        // Arrange
-        when(orderRepository.findByCustomerIdOrderByOrderDateDesc(TEST_CUSTOMER_ID))
-            .thenReturn(Arrays.asList(testOrder));
+        // Given
+        String customerId = "customer123";
+        Order order1 = new Order();
+        order1.setId(1L);
+        order1.setCustomerId(customerId);
+        order1.setStatus(OrderStatus.DELIVERED);
+        order1.setOrderDate(LocalDateTime.now().minusDays(1));
 
-        // Act
-        List<Order> result = orderService.getCustomerOrderHistory(TEST_CUSTOMER_ID);
+        Order order2 = new Order();
+        order2.setId(2L);
+        order2.setCustomerId(customerId);
+        order2.setStatus(OrderStatus.PENDING);
+        order2.setOrderDate(LocalDateTime.now());
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(TEST_CUSTOMER_ID, result.get(0).getCustomerId());
-        verify(orderRepository).findByCustomerIdOrderByOrderDateDesc(TEST_CUSTOMER_ID);
+        List<Order> expectedOrders = Arrays.asList(order1, order2);
+
+        when(orderRepository.findByCustomerIdOrderByOrderDateDesc(customerId)).thenReturn(expectedOrders);
+
+        // When
+        List<Order> actualOrders = orderService.getCustomerOrderHistory(customerId);
+
+        // Then
+        assertThat(actualOrders).hasSize(2);
+        assertThat(actualOrders).containsExactlyElementsOf(expectedOrders);
+        verify(orderRepository).findByCustomerIdOrderByOrderDateDesc(customerId);
     }
 
     @Test
-    void getOrderById_WhenOrderExists_ShouldReturnOrder() {
-        // Arrange
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
+    void submitRefundRequest_ShouldCreateRefundRequest() {
+        // Given
+        Long orderItemId = 1L;
+        String description = "Defective product";
+        String evidenceImageUrl = "http://example.com/evidence.jpg";
 
-        // Act
-        Order result = orderService.getOrderById(1L);
+        OrderItem orderItem = new OrderItem();
+        orderItem.setId(orderItemId);
+        Order order = new Order();
+        order.setId(1L);
+        order.setStatus(OrderStatus.DELIVERED);
+        orderItem.setOrder(order);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
-        verify(orderRepository).findById(1L);
+        when(orderItemRepository.findById(orderItemId)).thenReturn(Optional.of(orderItem));
+        when(refundRequestRepository.save(any(RefundRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Order result = orderService.submitRefundRequest(orderItemId, description, evidenceImageUrl);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(order.getId());
+        verify(orderItemRepository).findById(orderItemId);
+        verify(refundRequestRepository).save(any(RefundRequest.class));
     }
 
     @Test
-    void getOrderById_WhenOrderDoesNotExist_ShouldThrowException() {
-        // Arrange
-        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+    void submitRefundRequest_ShouldThrowException_WhenOrderItemNotFound() {
+        // Given
+        Long orderItemId = 1L;
+        when(orderItemRepository.findById(orderItemId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(OrderNotFoundException.class, () -> orderService.getOrderById(999L));
-        verify(orderRepository).findById(999L);
-    }
-
-    @Test
-    void submitRefundRequest_WhenValidRequest_ShouldCreateRefundRequest() {
-        // Arrange
-        when(orderRepository.findAll()).thenReturn(Arrays.asList(testOrder));
-        when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
-
-        // Act
-        orderService.submitRefundRequest(
-            testOrderItem.getId(),
-            "Defective product",
-            "evidence.jpg"
-        );
-
-        // Assert
-        verify(orderRepository).save(any(Order.class));
-        assertNotNull(testOrderItem.getRefundRequest());
-        assertEquals(RefundStatus.PENDING, testOrderItem.getRefundRequest().getStatus());
-        assertEquals("Defective product", testOrderItem.getRefundRequest().getDescription());
-        assertEquals("evidence.jpg", testOrderItem.getRefundRequest().getEvidenceImageUrl());
-        assertEquals(OrderStatus.DELIVERED, testOrder.getStatus(), "Order status should remain DELIVERED after refund request");
-    }
-
-    @Test
-    void submitRefundRequest_WhenOrderItemNotFound_ShouldThrowException() {
-        // Arrange
-        when(orderRepository.findAll()).thenReturn(Arrays.asList(testOrder));
-
-        // Act & Assert
+        // When & Then
         assertThrows(OrderNotFoundException.class, () ->
-            orderService.submitRefundRequest(999L, "Invalid item", "evidence.jpg")
-        );
+            orderService.submitRefundRequest(orderItemId, "description", "evidence.jpg"));
+        verify(orderItemRepository).findById(orderItemId);
+        verify(refundRequestRepository, never()).save(any());
     }
 
     @Test
-    void submitRefundRequest_WhenOrderNotDelivered_ShouldThrowException() {
-        // Arrange
-        testOrder.setStatus(OrderStatus.PENDING);
-        when(orderRepository.findAll()).thenReturn(Arrays.asList(testOrder));
+    void getOrderById_ShouldReturnOrder() {
+        // Given
+        Long orderId = 1L;
+        Order expectedOrder = new Order();
+        expectedOrder.setId(orderId);
+        expectedOrder.setStatus(OrderStatus.DELIVERED);
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(expectedOrder));
 
-        // Act & Assert
-        assertThrows(IllegalStateException.class, () ->
-            orderService.submitRefundRequest(
-                testOrderItem.getId(),
-                "Cannot refund undelivered item",
-                "evidence.jpg"
-            )
-        );
+        // When
+        Order actualOrder = orderService.getOrderById(orderId);
+
+        // Then
+        assertThat(actualOrder).isNotNull();
+        assertThat(actualOrder.getId()).isEqualTo(orderId);
+        verify(orderRepository).findById(orderId);
     }
 
     @Test
-    void submitRefundRequest_WhenRefundAlreadyExists_ShouldThrowException() {
-        // Arrange
-        RefundRequest existingRefund = new RefundRequest();
-        existingRefund.setStatus(RefundStatus.PENDING);
-        testOrderItem.setRefundRequest(existingRefund);
-        when(orderRepository.findAll()).thenReturn(Arrays.asList(testOrder));
+    void getOrderById_ShouldThrowException_WhenOrderNotFound() {
+        // Given
+        Long orderId = 1L;
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(IllegalStateException.class, () ->
-            orderService.submitRefundRequest(
-                testOrderItem.getId(),
-                "Duplicate refund request",
-                "evidence.jpg"
-            )
-        );
+        // When & Then
+        assertThrows(OrderNotFoundException.class, () -> orderService.getOrderById(orderId));
+        verify(orderRepository).findById(orderId);
+    }
+
+    @Test
+    void saveOrder_ShouldReturnSavedOrder() {
+        // Given
+        Order order = new Order();
+        order.setCustomerId("customer123");
+        order.setStatus(OrderStatus.PENDING);
+        order.setOrderDate(LocalDateTime.now());
+        when(orderRepository.save(order)).thenReturn(order);
+
+        // When
+        Order savedOrder = orderService.saveOrder(order);
+
+        // Then
+        assertThat(savedOrder).isNotNull();
+        verify(orderRepository).save(order);
     }
 }

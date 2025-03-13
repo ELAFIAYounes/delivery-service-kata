@@ -3,5 +3,7 @@ package com.ordermanagement.domain.entity;
 public enum OrderStatus {
     PENDING,
     CONFIRMED,
-    DELIVERED
+    SHIPPED,
+    DELIVERED,
+    CANCELLED
 }
